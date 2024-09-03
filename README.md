@@ -6,4 +6,5 @@ The input format is list of list.
 
 Sample output
 
-![stats](https://github.com/user-attachments/assets/10019d5f-7bf8-43c4-a410-36e0319917e9)
+![stats2](https://github.com/user-attachments/assets/e4c6ecfe-f080-4643-b09b-c8c6ef9c070b)
+
