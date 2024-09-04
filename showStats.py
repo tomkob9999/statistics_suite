@@ -1,10 +1,8 @@
 #
 # showStats
 #
-# showStats
-#
 # Description: Find bounds by Z-Score, Chebyshev's inequality and Law of Large Number, Central Limit Theorem, etc
-# Version: 1.0.2
+# Version: 1.0.4
 # Author: Tomio Kobayashi
 # Last Update: 2024/9/4
 
@@ -13,8 +11,6 @@ import numpy as np
 import scipy.stats as stats
 
 def showStats(samples, confidence_level = 0.95, population_percentile=0.6):
-
-
     # Find the z-scores for the two tails
     alpha = 1 - confidence_level
     k = stats.norm.ppf(1 - alpha / 2)
@@ -22,8 +18,6 @@ def showStats(samples, confidence_level = 0.95, population_percentile=0.6):
     means = []
     variances = []
     for sample in samples:
-
-
         # Calculate mean and variance of the sample
         sample_mean = np.mean(sample)
         sample_variance = np.var(sample, ddof=1)
@@ -40,8 +34,8 @@ def showStats(samples, confidence_level = 0.95, population_percentile=0.6):
     print("*******")
     print("PREDICTION AFTER", num_sampling,  "SAMPLINGS")
 #     print(f"k: {k} for confidence_level: {confidence_level}")
-    print("Sample Mean:", sample_mean)
-    print("Sample Variance:", sample_variance)
+#     print("Sample Mean:", sample_mean)
+#     print("Sample Variance:", sample_variance)
     if num_sampling == 1:
 #         variance_of_sample = sample_variance/sample_picks
         variance_of_sample = sample_variance*sample_picks/(sample_picks-1)**2
@@ -63,17 +57,28 @@ def showStats(samples, confidence_level = 0.95, population_percentile=0.6):
         variance_of_variances = np.var(variances, ddof=1)
         variance_of_sample = variance_of_variances*num_sampling/(num_sampling-1)**2
 
-        print("variance_of_variances", variance_of_variances)
-        print("variance_of_sample", variance_of_sample)
-
         # By Z score
         # Calculate the interval bounds
         ci_mean_lower = mean_of_variances - k * np.sqrt(variance_of_sample) 
         ci_mean_upper = mean_of_variances + k * np.sqrt(variance_of_sample)
+    else:
+        variance_of_sample = variances[0]
+        alpha = 1 - confidence_level
+        # Degrees of freedom
+        df = sample_picks - 1
 
-        # Display the results
-        print(f"Interval Bounds of Variance by Z score Lower Bound: [{ci_mean_lower:.4f}, {ci_mean_upper:.4f}]")
-    
+        # Chi-square critical values
+        chi2_lower = stats.chi2.ppf(alpha / 2, df)
+        chi2_upper = stats.chi2.ppf(1 - alpha / 2, df)
+
+        # Confidence interval for the variance
+        ci_mean_lower = (df * variance_of_sample) / chi2_upper
+        ci_mean_upper = (df * variance_of_sample) / chi2_lower
+        
+    # Display the results
+    print(f"Interval Bounds of Variance by Z score Lower Bound: [{ci_mean_lower:.4f}, {ci_mean_upper:.4f}]")
+
+
     # By Chebyshev
     k2 = np.sqrt(1 / (1 - population_percentile))
     # Calculate the interval bounds
@@ -111,7 +116,7 @@ variance = np.var(normal_vector)
 print("Population Mean:", mean)
 print("Population Variance:", variance)
 
-sample_picks =100
+sample_picks =20
 print("Sample Size", sample_picks)
 num_sampling = 1
 # Pick 5 random elements from the vector
@@ -122,14 +127,14 @@ print(f"Confidence Level: {confidence_level}")
 
 # Number of Sampling
 for num_sampling in [1, 5, 10, 100]:
-#     samples = []
-#     for _ in range(num_sampling):
-#         # Pick 5 random elements from the vector
-#         sample = np.random.choice(normal_vector, size=sample_picks, replace=False)
-#         samples.append(sample)
-    samples = np.empty((0, sample_picks))
+    samples = []
     for _ in range(num_sampling):
         # Pick 5 random elements from the vector
         sample = np.random.choice(normal_vector, size=sample_picks, replace=False)
-        samples = np.vstack([samples, sample])
+        samples.append(sample)
+#     samples = np.empty((0, sample_picks))
+#     for _ in range(num_sampling):
+#         # Pick 5 random elements from the vector
+#         sample = np.random.choice(normal_vector, size=sample_picks, replace=False)
+#         samples = np.vstack([samples, sample])
     showStats(samples, confidence_level, 0.7)
